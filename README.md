@@ -1,1 +1,1 @@
-# Pieces-of-code
+Just some code in several languages regarding CAN Bus and automotive

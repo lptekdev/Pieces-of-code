@@ -3,12 +3,12 @@
 
 param ($edge_cluster_name, $CRED)
 
-#$nsx = Import-Module ".\nsxmodule.psm1"
-#$credentials =LoadAccessData
+$nsx = Import-Module ".\nsxmodule.psm1"
+$credentials =LoadAccessData
 
 
-#$SECPASS = ConvertTo-SecureString $credentials.password -AsPlainText -Force
-#$CRED = New-Object System.Management.Automation.PSCredential ($credentials.username, $SECPASS)
+$SECPASS = ConvertTo-SecureString $credentials.password -AsPlainText -Force
+$CRED = New-Object System.Management.Automation.PSCredential ($credentials.username, $SECPASS)
 
 
 
@@ -19,10 +19,10 @@ $headers = @{
 }
 
 
-#Invoke-RestMethod -Method 'PUT' -Uri $Url -Credential $CRED -Body $Body -Authentication "Basic" -SkipCertificateCheck -Headers $headers
+
 
 try {
-  #$web_request = Invoke-WebRequest -Method 'PUT' -Uri $Url -Credential $CRED -Body $Body -Authentication "Basic" -SkipCertificateCheck -Headers $headers
+  
   $edge_clusters_array = Invoke-RestMethod -Method 'GET' -Uri $Url -Credential $CRED -Authentication "Basic" -SkipCertificateCheck -Headers $headers
   #$web_request
   foreach($edge_cluster in $edge_clusters_array.results){
@@ -35,8 +35,7 @@ try {
   }
   write-host "Edge Cluster not found"
  
-    # This will only execute if the Invoke-WebRequest is successful.
-    #$StatusCode = $web_request
+    
 }
 catch
 {

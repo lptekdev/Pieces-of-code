@@ -1,18 +1,18 @@
 param(
     $edge_cluster_name,
-    $segment_name, $edge_cluster, $dhcp_server_address
+    $segment_name, $dhcp_server_address
 )
 Import-Module ".\nsxmodule.psm1"
 
-write-host "Loading environment file info" -ForegroundColor DarkGreen
+write-host "1- Loading environment file info" -ForegroundColor DarkGreen
 $credentials = LoadAccessData
 
 
 $SECPASS = ConvertTo-SecureString ($credentials.password) -AsPlainText -Force
 $CRED = New-Object System.Management.Automation.PSCredential ($credentials.username, $SECPASS)
 
-
-write-host "Reading Edge Cluster info" -ForegroundColor  DarkGreen
+write-host ""
+write-host "2- Reading Edge Cluster info" -ForegroundColor  DarkGreen
 $edge_cluster = getEdgeCluster -edge_cluster_name $edge_cluster_name -credentials $CRED
 
 if ($edge_cluster.status -ne 200){
@@ -27,8 +27,23 @@ if ($edge_cluster.status -ne 200){
     break
 }
 else {
-    write-host "Creating DHCP Config" -ForegroundColor  DarkGreen
-    $dhcp_config = NewDHCP -segment_name $segment_name -edge_cluster $edge_cluster.id  -server_address $dhcp_server_address -credentials $credentials
+    write-host "Found Edge Cluster: "$edge_cluster.message -ForegroundColor DarkGreen
+    write-host
+    write-host "2- Creating DHCP Config" -ForegroundColor  DarkGreen
+    $dhcp = NewDHCP -segment_name $segment_name -edge_cluster $edge_cluster.message  -server_address $dhcp_server_address -credentials $CRED
+    
+    if ($dhcp.status -notlike "CREATED"){
+        write-host "Error creating DHCP: "$dhcp.message" - "$dhcp.status -ForegroundColor DarkRed
+        break
+    }
+    else {
+        write-host "Created DHCP Config sucessfully: "$dhcp.path" - "$dhcp.server_address -ForegroundColor DarkGreen
+
+        write-host "2- Creating new Segment" -ForegroundColor  DarkGreen
+        $segment
+    }
+
+    
 }
 
 

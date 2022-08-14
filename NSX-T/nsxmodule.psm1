@@ -83,18 +83,88 @@ function NewDHCP() {
 
   try {
     write-host "Invoking API PUT to create DHCP config" -ForegroundColor DarkYellow
-    $web_request = Invoke-RestMethod -Method 'PUT' -Uri $Url -Credential $credentials -Body $Body -Authentication "Basic" -SkipCertificateCheck -Headers $headers
-    return $web_request 
+    $dhcp = Invoke-RestMethod -Method 'PUT' -Uri $Url -Credential $credentials -Body $Body -Authentication "Basic" -SkipCertificateCheck -Headers $headers    
+    $response = @{
+      status = $dhcp.status == "CREATED"
+      message = $dhcp.path
+      server_address = $dhcp.server_address
+    }
+    return $response
   
   }
   catch
   {
-    Write-host "Request failed" -ForegroundColor DarkRed
-      $StatusCode = $_.ErrorDetails.Message
-      $StatusCode |ConvertFrom-Json |Select -ExpandProperty error_message
-      #$_.Exception
+    #Write-host "Request failed" -ForegroundColor DarkRed
+    $err = $_.ErrorDetails.Message |ConvertFrom-Json  
+    $err  
+     $response = @{
+          status = $err.httpStatus
+          message = $err.error_message
+        }
+        return $response 
   }
 
+}
+
+
+function NewSegment {
+  
+  param(
+    $transport_zone, $segment_name, $tier1_gw, $network, $gateway, $dhcp_ranges, $dhcp_path, $dhcp_server_ip
+  )
+  #####criar segment #####
+    $Url = "https://nsxtmanager.home.lan/policy/api/v1/infra/segments/"+$segment_name#+"?force=true"
+
+    $body = @{}
+    $body.Add("advanced_config",@{})
+    $body.Add("connectivity_path","/infra/tier-1s/"+$tier1_gw) #Default_T1" - Tier1 gw name
+    $body.Add("transport_zone_path","/infra/sites/default/enforcement-points/default/transport-zones/"+$transport_zone)
+    $body.Add("type","ROUTED")
+    #$subnets =
+
+
+
+    $subnets = new-object PSObject
+    $subnets | add-member -type NoteProperty -Name gateway_address -Value $gateway  #"172.16.10.1/24"
+    $subnets | add-member -type NoteProperty -Name network -Value $network  #"172.16.10.0/24"
+    $subnets | add-member -type NoteProperty -Name dhcp_ranges -Value @($dhcp_ranges)   #@("172.16.10.100-172.16.10.200")
+    $subnets | Add-Member -type NoteProperty -Name dhcp_config -Value @{server_address=$dhcp_server_ip;resource_type="SegmentDhcpV4Config"}  #@{server_address="172.16.10.2/24";resource_type="SegmentDhcpV4Config"}
+
+    $array = @()
+    $array += $subnets
+    $body.Add("subnets",$array)
+
+    $body.Add("dhcp_config_path", $dhcp_path) #"/infra/dhcp-server-configs/dhcp_veeam")
+
+
+    $body = $body |ConvertTo-Json -Depth 3
+    write-host $body
+
+
+    $headers = @{
+        'Content-Type' = 'application/json'
+    }
+
+
+
+    #write-host $Body 
+    write-host "Invoking API PUT to create new SEGMENT" -ForegroundColor DarkYellow
+    try {
+      $segment = Invoke-RestMethod -Method 'PUT' -Uri $url -Credential $CRED -Body $Body -Authentication "Basic" -SkipCertificateCheck -Headers $headers
+    }
+    catch
+    {    
+      $err = $_.ErrorDetails.Message |ConvertFrom-Json  
+      $err  
+      $response = @{
+            status = $err.httpStatus
+            message = $err.error_message
+          }
+          return $response 
+    }
+
+  
+  
 }
 
 
@@ -102,6 +172,7 @@ function NewDHCP() {
 Export-ModuleMember -Function getEdgeCluster
 Export-ModuleMember -Function NewDHCP
 Export-ModuleMember -Function LoadAccessData
+Export-ModuleMember -Function NewSegment
 
 
 

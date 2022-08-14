@@ -1,17 +1,17 @@
 ######GET THE EDGE CLUSTER ID BASED ON NAME TO USE IT IN THE DHCP CREATION#####
 
 
-param ($edge_cluster_name)
+param ($edge_cluster_name, $CRED)
+
+#$nsx = Import-Module ".\nsxmodule.psm1"
+#$credentials =LoadAccessData
+
+
+#$SECPASS = ConvertTo-SecureString $credentials.password -AsPlainText -Force
+#$CRED = New-Object System.Management.Automation.PSCredential ($credentials.username, $SECPASS)
 
 
 
-$SECPASS = ConvertTo-SecureString '' -AsPlainText -Force
-$CRED = New-Object System.Management.Automation.PSCredential ('', $SECPASS)
-
-
-
-
-####Criar o DHCP config#####
 $Url = "https://nsxtmanager.home.lan/api/v1/edge-clusters"
 
 $headers = @{

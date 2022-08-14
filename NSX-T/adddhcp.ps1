@@ -1,11 +1,13 @@
 #####TO CREATE A NEW DHCP CONFIG SERVER##### NOT CONCLUDED
 
-param ($segment_name, $tier_1_id)
+param ($segment_name, $edge_cluster, $server_address)
+
+$nsx = Import-Module ".\nsxmodule.psm1"
+$credentials =LoadAccessData
 
 
-
-$SECPASS = ConvertTo-SecureString '' -AsPlainText -Force
-$CRED = New-Object System.Management.Automation.PSCredential ('', $SECPASS)
+$SECPASS = ConvertTo-SecureString $credentials.password -AsPlainText -Force
+$CRED = New-Object System.Management.Automation.PSCredential ($credentials.username, $SECPASS)
 
 
 
@@ -13,8 +15,8 @@ $CRED = New-Object System.Management.Automation.PSCredential ('', $SECPASS)
 ####Criar o DHCP config#####
 $Url = "https://nsxtmanager.home.lan/policy/api/v1/infra/dhcp-server-configs/dhcp_"+$segment_name
 $Body = [PSCustomObject]@{
-  edge_cluster_path = "/infra/sites/default/enforcement-points/default/edge-clusters/70bde1d6-d998-4086-b83b-4d84990f8d36"
-  server_address= "172.16.10.2/24"
+  edge_cluster_path = "/infra/sites/default/enforcement-points/default/edge-clusters/"+$edge_cluster
+  server_address= $server_address
   lease_time= 86400
   resource_type = "SegmentDhcpV4Config"
 } | ConvertTo-Json
@@ -29,7 +31,7 @@ $headers = @{
 try {
   #$web_request = Invoke-WebRequest -Method 'PUT' -Uri $Url -Credential $CRED -Body $Body -Authentication "Basic" -SkipCertificateCheck -Headers $headers
   $web_request = Invoke-RestMethod -Method 'PUT' -Uri $Url -Credential $CRED -Body $Body -Authentication "Basic" -SkipCertificateCheck -Headers $headers
-  $web_request 
+  return $web_request 
  
     # This will only execute if the Invoke-WebRequest is successful.
     #$StatusCode = $web_request

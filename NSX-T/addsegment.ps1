@@ -4,9 +4,12 @@ param ($segment_name)
 
 
 
-$SECPASS = ConvertTo-SecureString '' -AsPlainText -Force
-$CRED = New-Object System.Management.Automation.PSCredential ('', $SECPASS)
+$nsx = Import-Module ".\nsxmodule.psm1"
+$credentials =LoadAccessData
 
+
+$SECPASS = ConvertTo-SecureString $credentials.password -AsPlainText -Force
+$CRED = New-Object System.Management.Automation.PSCredential ($credentials.username, $SECPASS)
 
 
 

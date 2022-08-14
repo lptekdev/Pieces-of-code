@@ -9,33 +9,57 @@ $credentials =LoadAccessData
 $SECPASS = ConvertTo-SecureString $credentials.password -AsPlainText -Force
 $CRED = New-Object System.Management.Automation.PSCredential ($credentials.username, $SECPASS)
 
-
-
-
-####Criar o DHCP config#####
-$Url = "https://nsxtmanager.home.lan/policy/api/v1/infra/dhcp-server-configs/dhcp_"+$segment_name
-$Body = [PSCustomObject]@{
-  edge_cluster_path = "/infra/sites/default/enforcement-points/default/edge-clusters/"+$edge_cluster
-  server_address= "172.16.100.2/24"
-  lease_time= 86400
-  resource_type = "SegmentDhcpV4Config"
-} | ConvertTo-Json
-
 $headers = @{
     'Content-Type' = 'application/json'
 }
 
-try {
+
+  $Url = "https://nsxtmanager.home.lan/policy/api/v1/infra/dhcp-server-configs/dhcp_"+$segment_name
   
-  $web_request = Invoke-RestMethod -Method 'PUT' -Uri $Url -Credential $CRED -Body $Body -Authentication "Basic" -SkipCertificateCheck -Headers $headers
-  return $web_request 
-}
+  $headers = @{
+    'Content-Type' = 'application/json'
+  }
+
+  $Body = [PSCustomObject]@{
+    edge_cluster_path = "/infra/sites/default/enforcement-points/default/edge-clusters/"+$edge_cluster
+    server_addresses= @($server_address)
+    lease_time= 86400
+    resource_type = "DhcpServerConfig"
+    display_name = "dhcp_"+$segment_name
+    id = "dhcp_"+$segment_name
+  } | ConvertTo-Json
+
+  write-host "Invoking API PUT to create DHCP config" -ForegroundColor DarkYellow
+  #$Body
+  try {
+    $dhcp = Invoke-RestMethod -Method 'PUT' -Uri $Url -Credential $CRED -Body $Body -Authentication "Basic" -SkipCertificateCheck -Headers $headers 
+    $dhcp
+    
+    #$dhcp = Invoke-WebRequest -Method 'PUT' -Uri $Url -Credential $CRED -Body $Body -Authentication "Basic" -SkipCertificateCheck -Headers $headers    
+    
+    $response = @{
+      status = "CREATED"
+      message = $dhcp.path
+      server_address = $dhcp.server_address
+    }
+    return $response
+
+  }
 catch
 {
-  Write-host "Request failed"
-    $StatusCode = $_.ErrorDetails.Message
-    $StatusCode |ConvertFrom-Json |Select -ExpandProperty error_message
-    #$_.Exception
+  Write-host "Request failed" -ForegroundColor Red
+  #$err = $_.ErrorDetails.Message |ConvertFrom-Json  
+  write-host $_.ErrorDetails
+  write-host $_.Exception
+  $err = $_.ErrorDetails#.Message |ConvertFrom-Json  
+  $err  
+  $response = @{
+        status = $err.httpStatus
+        message = $err.error_message
+  }
+  return $response 
 }
+
+
 
 

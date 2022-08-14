@@ -25,7 +25,7 @@ function getEdgeCluster(){
 
   try {
     write-host "Invoking API GET edge cluster ID" -ForegroundColor DarkYellow
-    $edge_clusters_array = Invoke-RestMethod -Method 'GET' -Uri $Url -Credential $credentials -Authentication "Basic" -SkipCertificateCheck -Headers $headers
+    $edge_clusters_array = Invoke-RestMethod -Method 'GET' -Uri $Url -Credential $credentials -Authentication "Basic" -SkipCertificateCheck -Headers $headers    
     
     foreach($edge_cluster in $edge_clusters_array.results){
       #$edge_cluster.display_name
@@ -46,8 +46,6 @@ function getEdgeCluster(){
     }
     return $response
   
-      # This will only execute if the Invoke-WebRequest is successful.
-      #$StatusCode = $web_request
   }
   catch
   {
@@ -63,45 +61,50 @@ function getEdgeCluster(){
 }
 
 function NewDHCP() {
-  #####TO CREATE A NEW DHCP CONFIG SERVER##### NOT CONCLUDED
+  #####TO CREATE A NEW DHCP CONFIG SERVER##### 
 
-  param ($segment_name, $edge_cluster, $server_address, $credentials)
+  param ([string]$segment_name, [string]$edge_cluster, [string]$server_address, $credentials)
 
   ####Create o DHCP config#####
-  
-  $Url = "https://nsxtmanager.home.lan/policy/api/v1/infra/dhcp-server-configs/dhcp_"+$segment_name
-  $Body = [PSCustomObject]@{
-    edge_cluster_path = "/infra/sites/default/enforcement-points/default/edge-clusters/"+$edge_cluster
-    server_address= $server_address
-    lease_time= 86400
-    resource_type = "SegmentDhcpV4Config"
-  } | ConvertTo-Json
-
-  $headers = @{
+  try {
+    $Url = "https://nsxtmanager.home.lan/policy/api/v1/infra/dhcp-server-configs/dhcp_"+$segment_name
+    $headers = @{
       'Content-Type' = 'application/json'
   }
-
-  try {
+  
+    $Body = [PSCustomObject]@{
+      edge_cluster_path = "/infra/sites/default/enforcement-points/default/edge-clusters/"+$edge_cluster
+      server_addresses= @($server_address)
+      lease_time= 86400
+      resource_type = "DhcpServerConfig"#"SegmentDhcpV4Config"#"DhcpServerConfig"
+      display_name = "dhcp_"+$segment_name
+      id = "dhcp_"+$segment_name   
+    } | ConvertTo-Json
+  
     write-host "Invoking API PUT to create DHCP config" -ForegroundColor DarkYellow
-    $dhcp = Invoke-RestMethod -Method 'PUT' -Uri $Url -Credential $credentials -Body $Body -Authentication "Basic" -SkipCertificateCheck -Headers $headers    
+    #$Body
+    $dhcp = Invoke-RestMethod -Method 'PUT' -Uri $Url -Credential $CRED -Body $Body -Authentication "Basic" -SkipCertificateCheck -Headers $headers          
+    
     $response = @{
-      status = $dhcp.status == "CREATED"
-      message = $dhcp.path
+      status = "CREATED"
+      message = ""
       server_address = $dhcp.server_address
+      dhcp_path = $dhcp.path
     }
     return $response
   
   }
   catch
   {
-    #Write-host "Request failed" -ForegroundColor DarkRed
+    Write-host "Request failed" -ForegroundColor Red
+    #$err = $_.ErrorDetails.Message |ConvertFrom-Json  
     $err = $_.ErrorDetails.Message |ConvertFrom-Json  
-    $err  
-     $response = @{
+    #$err  
+    $response = @{
           status = $err.httpStatus
           message = $err.error_message
-        }
-        return $response 
+    }
+    return $response 
   }
 
 }
@@ -110,14 +113,14 @@ function NewDHCP() {
 function NewSegment {
   
   param(
-    $transport_zone, $segment_name, $tier1_gw, $network, $gateway, $dhcp_ranges, $dhcp_path, $dhcp_server_ip
+    $transport_zone, $segment_name, $tier1_gw_name, $network, $gateway, $dhcp_ranges, $dhcp_path, $dhcp_server_ip
   )
   #####criar segment #####
     $Url = "https://nsxtmanager.home.lan/policy/api/v1/infra/segments/"+$segment_name#+"?force=true"
 
     $body = @{}
     $body.Add("advanced_config",@{})
-    $body.Add("connectivity_path","/infra/tier-1s/"+$tier1_gw) #Default_T1" - Tier1 gw name
+    $body.Add("connectivity_path","/infra/tier-1s/"+$tier1_gw_name) #Default_T1" - Tier1 gw name
     $body.Add("transport_zone_path","/infra/sites/default/enforcement-points/default/transport-zones/"+$transport_zone)
     $body.Add("type","ROUTED")
     #$subnets =
@@ -137,30 +140,25 @@ function NewSegment {
     $body.Add("dhcp_config_path", $dhcp_path) #"/infra/dhcp-server-configs/dhcp_veeam")
 
 
-    $body = $body |ConvertTo-Json -Depth 3
-    write-host $body
-
-
+    $body = $body |ConvertTo-Json -Depth 3   
     $headers = @{
         'Content-Type' = 'application/json'
     }
-
-
-
-    #write-host $Body 
+    
     write-host "Invoking API PUT to create new SEGMENT" -ForegroundColor DarkYellow
+    $body
     try {
-      $segment = Invoke-RestMethod -Method 'PUT' -Uri $url -Credential $CRED -Body $Body -Authentication "Basic" -SkipCertificateCheck -Headers $headers
+      $segment = Invoke-RestMethod -Method 'PUT' -Uri $url -Credential $CRED -Body $body -Authentication "Basic" -SkipCertificateCheck -Headers $headers
+      return $segment
     }
     catch
     {    
-      $err = $_.ErrorDetails.Message |ConvertFrom-Json  
-      $err  
-      $response = @{
-            status = $err.httpStatus
+      $err = $_.ErrorDetails.Message |ConvertFrom-Json      
+       $response = @{
+            status = $err.error_code
             message = $err.error_message
           }
-          return $response 
+          return $err     
     }
 
   

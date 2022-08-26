@@ -26,16 +26,18 @@ $body.Add("gateway_address",$gateway)
 $body.Add("mac_address",$mac)
 $body.Add("ip_address",$ip_address)
 
+if ($dns) {
+    $others = new-object PSObject
+    $others | add-member -type NoteProperty -Name code -Value 6
+    $others | add-member -type NoteProperty -Name values -Value @($dns)
+    
+    $new_others_array = @()
+    $new_others_array += $others
+    $others_object = @{}
+    $others_object.Add("others",$new_others_array)
+    $body.Add("options",$others_object)
+}
 
-$others = new-object PSObject
-$others | add-member -type NoteProperty -Name code -Value 6
-$others | add-member -type NoteProperty -Name values -Value @($dns)
-
-$new_others_array = @()
-$new_others_array += $others
-$others_object = @{}
-$others_object.Add("others",$new_others_array)
-$body.Add("options",$others_object)
 
 
 

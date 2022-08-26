@@ -83,7 +83,7 @@ function NewDHCP() {
   
     write-host "Invoking API PUT to create DHCP config" -ForegroundColor DarkYellow
     #$Body
-    $dhcp = Invoke-RestMethod -Method 'PUT' -Uri $Url -Credential $CRED -Body $Body -Authentication "Basic" -SkipCertificateCheck -Headers $headers          
+    $dhcp = Invoke-RestMethod -Method 'PUT' -Uri $Url -Credential $credentials -Body $Body -Authentication "Basic" -SkipCertificateCheck -Headers $headers          
     
     $response = @{
       status = "CREATED"
@@ -113,7 +113,7 @@ function NewDHCP() {
 function NewSegment {
   
   param(
-    $transport_zone, $segment_name, $tier1_gw_name, $network, $gateway, $dhcp_ranges, $dhcp_path, $dhcp_server_ip
+    $transport_zone, $segment_name, $tier1_gw_name, $network, $gateway, $dhcp_ranges, $dhcp_path, $dhcp_server_ip, $credentials
   )
   #####criar segment #####
     $Url = "https://nsxtmanager.home.lan/policy/api/v1/infra/segments/"+$segment_name#+"?force=true"
@@ -148,7 +148,7 @@ function NewSegment {
     write-host "Invoking API PUT to create new SEGMENT" -ForegroundColor DarkYellow
     $body
     try {
-      $segment = Invoke-RestMethod -Method 'PUT' -Uri $url -Credential $CRED -Body $body -Authentication "Basic" -SkipCertificateCheck -Headers $headers
+      $segment = Invoke-RestMethod -Method 'PUT' -Uri $url -Credential $credentials -Body $body -Authentication "Basic" -SkipCertificateCheck -Headers $headers
       return $segment
     }
     catch

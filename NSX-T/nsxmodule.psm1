@@ -115,31 +115,52 @@ function NewSegment {
   param(
     $transport_zone, $segment_name, $tier1_gw_name, $network, $gateway, $dhcp_ranges, $dhcp_path, $dhcp_server_ip, $credentials
   )
-  #####criar segment #####
+  ##### Create the segment body #####
     $Url = "https://nsxtmanager.home.lan/policy/api/v1/infra/segments/"+$segment_name#+"?force=true"
 
     $body = @{}
     $body.Add("advanced_config",@{})
-    $body.Add("connectivity_path","/infra/tier-1s/"+$tier1_gw_name) #Default_T1" - Tier1 gw name
+
+
+    if ($null -ne $tier1_gw_name){
+      $body.Add("connectivity_path","/infra/tier-1s/"+$tier1_gw_name) #Default_T1" - Tier1 gw name
+    }
     $body.Add("transport_zone_path","/infra/sites/default/enforcement-points/default/transport-zones/"+$transport_zone)
-    $body.Add("type","ROUTED")
+    
     #$subnets =
 
 
+  ###create the subnets array object#####
 
-    $subnets = new-object PSObject
-    $subnets | add-member -type NoteProperty -Name gateway_address -Value $gateway  #"172.16.10.1/24"
-    $subnets | add-member -type NoteProperty -Name network -Value $network  #"172.16.10.0/24"
-    $subnets | add-member -type NoteProperty -Name dhcp_ranges -Value @($dhcp_ranges)   #@("172.16.10.100-172.16.10.200")
-    $subnets | Add-Member -type NoteProperty -Name dhcp_config -Value @{server_address=$dhcp_server_ip;resource_type="SegmentDhcpV4Config"}  #@{server_address="172.16.10.2/24";resource_type="SegmentDhcpV4Config"}
+    if ($null -ne ($network || $gateway || $dhcp_ranges || $dhcp_server_ip)) {
+      $subnets = new-object PSObject
+      $subnets | add-member -type NoteProperty -Name gateway_address -Value $gateway  #"172.16.10.1/24"
+      $subnets | add-member -type NoteProperty -Name dhcp_ranges -Value @($dhcp_ranges)   #@("172.16.10.100-172.16.10.200")
+      $subnets | Add-Member -type NoteProperty -Name dhcp_config -Value @{server_address=$dhcp_server_ip;resource_type="SegmentDhcpV4Config"}  #@{server_address="172.16.10.2/24";resource_type="SegmentDhcpV4Config"}
+      $subnets | add-member -type NoteProperty -Name network -Value $network  #"172.16.10.0/24"
+      $array = @()
+      $array += $subnets
+      $body.Add("subnets",$array)
+      $body.Add("type","ROUTED")
+    }
+    else {
+      $body.Add("type","DISCONNECTED")
+    }
 
-    $array = @()
-    $array += $subnets
-    $body.Add("subnets",$array)
+    ##create the tags array object###
+   
+    $tags = new-object PSObject
+    $tags |add-member -type NoteProperty -Name scope -Value "segments"
+    $tags |add-member -type NoteProperty -Name tag -Value $segment_name
+    $tags_array = @()
+    $tags_array += $tags
+    $body.Add("tags",$tags_array)
 
-    $body.Add("dhcp_config_path", $dhcp_path) #"/infra/dhcp-server-configs/dhcp_veeam")
 
-
+    if ($null -ne $dhcp_path) {
+      $body.Add("dhcp_config_path", $dhcp_path) #"/infra/dhcp-server-configs/dhcp_veeam")
+    }
+    
     $body = $body |ConvertTo-Json -Depth 3   
     $headers = @{
         'Content-Type' = 'application/json'

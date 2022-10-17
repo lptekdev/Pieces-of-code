@@ -60,8 +60,10 @@ function getEdgeCluster(){
   }
 }
 
+
+#####TO CREATE A NEW DHCP CONFIG SERVER##### 
 function NewDHCP() {
-  #####TO CREATE A NEW DHCP CONFIG SERVER##### 
+  
 
   param ([string]$segment_name, [string]$edge_cluster, [string]$server_address, $credentials)
 
@@ -110,6 +112,7 @@ function NewDHCP() {
 }
 
 
+### Create a new segment ###
 function NewSegment {
   
   param(
@@ -122,6 +125,7 @@ function NewSegment {
     $body.Add("advanced_config",@{})
 
 
+    ## if the segment is not a isolated segment ###
     if ($null -ne $tier1_gw_name){
       $body.Add("connectivity_path","/infra/tier-1s/"+$tier1_gw_name) #Default_T1" - Tier1 gw name
     }

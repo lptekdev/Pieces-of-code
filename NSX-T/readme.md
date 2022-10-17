@@ -25,13 +25,18 @@ Isolated scripts are not fully functional, but regarding API calls if the reques
 ```
 <br/>
 
-Is also required a configured Tier-1 Gateway (the module doesn't creates this component).
+Is also required a pre-configured Tier-1 Gateway (the module doesn't creates this component).
 
-#### Run the script:
+#### Run the command:
 
 .\CreateNetworkInfra.ps1 -edge_cluster_name "edge_cluster_name" -segment_name "segment_name" -dhcp_server_address "172.16.100.2/24" -tier1_gw_name "tier_1_gateway_name" -network "172.16.100.0/24" -gateway "172.16.100.1/24" -dhcp_ranges "172.16.100.50-172.16.100.100"
 
 <br/>
 
-#### Run the script to create a isolated segment (just input the segment name as mandatory parameter)
-.\CreateNetworkInfra.ps1 -segment_name "segment_name"
+#### Run the command to create a isolated segment (just input the segment name as mandatory parameter)
+.\CreateNetworkInfra.ps1 -segment_name "segment_name" 
+
+<br/>
+
+#### Run the command to create a isolated segment, but DHCP server and DHCP leases configuration
+.\CreateNetworkInfra.ps1 -edge_cluster_name "edgecluster" -segment_name "sql_segment" -dhcp_server_address "172.16.100.2/24" network "172.16.100.0/24" -dhcp_ranges "172.16.100.50-172.16.100.100"

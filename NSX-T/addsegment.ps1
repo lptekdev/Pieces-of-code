@@ -14,7 +14,7 @@ $CRED = New-Object System.Management.Automation.PSCredential ($credentials.usern
 
 
 
-#####criar segment #####
+##### Create main segment body #####
 $Url = "https://nsxtmanager.home.lan/policy/api/v1/infra/segments/"+$segment_name+"?force=true"
 
 $body = @{}
@@ -25,7 +25,7 @@ $body.Add("type","ROUTED")
 #$subnets =
 
 
-
+##define subnet array###
 $subnets = new-object PSObject
 $subnets | add-member -type NoteProperty -Name gateway_address -Value "172.16.10.1/24"
 $subnets | add-member -type NoteProperty -Name network -Value "172.16.10.0/24"
@@ -35,6 +35,14 @@ $subnets | Add-Member -type NoteProperty -Name dhcp_config -Value @{server_addre
 $array = @()
 $array += $subnets
 $body.Add("subnets",$array)
+
+##define tags array###
+$tags = new-object PSObject
+$tags |add-member -type NoteProperty -Name scope -Value "name"
+$tags |add-member -type NoteProperty -Name tag -Value $segment_name
+$tags_array = @()
+$tags_array += $tags
+$body.Add("subnets",$tags_array)
 
 $body.Add("dhcp_config_path", "/infra/dhcp-server-configs/dhcp_veeam")
 

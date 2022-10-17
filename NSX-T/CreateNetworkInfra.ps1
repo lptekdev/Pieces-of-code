@@ -13,14 +13,16 @@ $SECPASS = ConvertTo-SecureString ($credentials.password) -AsPlainText -Force
 $CRED = New-Object System.Management.Automation.PSCredential ($credentials.username, $SECPASS)
 
 
-$null -ne $dhcp_server_address
-$null -ne $tier1_gw_name
-$null -ne $gateway
-$null -ne $dhcp_ranges
+#$null -ne $dhcp_server_address
+#$null -ne $tier1_gw_name
+#$null -ne $gateway
+#$null -ne $dhcp_ranges
 
-$null -ne $edge_cluster_name
+#$null -ne $edge_cluster_name
+
 
 if($null -ne $edge_cluster_name){
+    ### if to create a segment connected to a T1#
     write-host "2- Reading Edge Cluster info" -ForegroundColor  DarkGreen
     $edge_cluster = getEdgeCluster -edge_cluster_name $edge_cluster_name -credentials $CRED
 
@@ -57,6 +59,7 @@ if($null -ne $edge_cluster_name){
     }  
 }
 else {
+    ### cretes a isolated segment without connecting to T1
     write-host "2- Creating new isolated Segment" -ForegroundColor  DarkGreen
     $segment = NewSegment -transport_zone $credentials.transport_zone -segment_name $segment_name -network $network -credentials $CRED
     $segment

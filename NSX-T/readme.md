@@ -38,5 +38,4 @@ Is also required a pre-configured Tier-1 Gateway (the module doesn't creates thi
 
 <br/>
 
-#### Run the command to create a isolated segment, but DHCP server and DHCP leases configuration
-.\CreateNetworkInfra.ps1 -edge_cluster_name "edgecluster" -segment_name "sql_segment" -dhcp_server_address "172.16.100.2/24" network "172.16.100.0/24" -dhcp_ranges "172.16.100.50-172.16.100.100"
+

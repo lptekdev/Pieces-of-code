@@ -1,3 +1,5 @@
+# creates a new cluster in the specified datacenter #
+
 param(
 	$datacenter,
 	$name

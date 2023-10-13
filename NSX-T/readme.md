@@ -1,4 +1,4 @@
-## Powershell code for consuming NSX-T API <br />
+## Powershell code for consuming NSX-T API (Applies to NSX-T 3.2) <br />
 This includes a powershell module that can be used to create a NSX-T segment and DHCP configuration, to be used as DHCP server for VMs.<br />
 The module uses several functions to make several API calls. <br />
 The script: CreateNetworkInfra imports the module and creates the required network configurations.
